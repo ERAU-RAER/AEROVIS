@@ -60,7 +60,9 @@ def main():
         exp_name = "exp" if args.experiment_name is None else args.experiment_name
         train(train_using, save_to, num_epochs, exp_name)
     elif args.predict_images:
-        predict(args.use_model, args.images)
+        use_model = "runs/exp/weights/best.pt" if args.use_model is None else args.use_model 
+        img_dir = "standard_object_shape-1/test/images" if args.images is None else args.images
+        predict(use_model, img_dir) 
 
 
 if __name__ == "__main__":

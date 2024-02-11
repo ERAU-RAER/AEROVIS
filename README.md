@@ -51,3 +51,23 @@ Image directory to predict. Default: `standard_object_shape-1/test/images`.
 
 - **-u, --use-model [path/to/model/weights.pt]**
 Model to use for predictions. Default: `runs/exp/
+
+### Usage
+
+#### Train 
+
+| Option | Description | Default |
+|---|---|---|
+| `-T`, `--train` | Train a new model. | N/A |
+| `-t`, `--train-using` | Train using specified model. | `models/yolov8n.pt` |
+| `-s`, `--save-as` | Save the model to a specified path. | `models/yolov8n.pt` |
+| `-e`, `--epochs` | Define number of training epochs. | 1 |
+| `-n`, `--experiment-name` | Name of experiment directory. | `exp` |
+
+#### Predict 
+
+| Option | Description | Default |
+|---|---|---|
+| `-P`, `--predict-images` | Predict a directory of images using a defined model. | N/A |
+| `-i`, `--images` | Image directory to predict. | `standard_object_shape-1/test/images` |
+| `-u`, `--use-model`| Model to use for predictions. | `runs/exp/weights/best.pt` |
