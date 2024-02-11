@@ -20,37 +20,7 @@ This project is a subcomponent of [AEROLOGIC](https://github.com/ERAU-SUAS/AEROL
 
 6. Add the line `ROBOFLOW_API_KEY=<your private key>`.
 
-7. Install dependencies using `pip install -r requirements.txt`. 
-
-### Usage 
-
-#### Train
-
-- **-T, --train** 
-Train a new model.
-
-- **-t, --train-using [path/to/model.pt]** 
-Train using specified model. Default: `models/yolov8n.pt`.
-
-- **-s, --save-as [desired/path]**
-Save the model to a specified path. Default: `models/yolov8n.pt`.
-
-- **-e, --epochs [num_epochs]** 
-Define number of training epochs. Default: 1.
-
-- **-n, --experiment-name [name]**
-Name of experiment directory. Default: `exp`. 
-
-#### Predict
-
-- **-P, --predict-images**
-Predict a directory of images using a defined model. Default is `
-
-- **-i, --images [path/to/image/dir]**
-Image directory to predict. Default: `standard_object_shape-1/test/images`.
-
-- **-u, --use-model [path/to/model/weights.pt]**
-Model to use for predictions. Default: `runs/exp/
+7. Install dependencies using `pip install -r requirements.txt`.
 
 ### Usage
 
