@@ -32,11 +32,18 @@ def train(use_model, save_to, num_epochs, exp_name):
     os.replace("yolov8n.pt", full_save_path) 
 
 
-def predict(use_model, imgs_to_predict):
+def predict_dir(use_model, imgs_to_predict):
     use_model_path = os.path.abspath(use_model) 
     imgs_dir = os.path.abspath(imgs_to_predict)
     infer = YOLO(use_model_path)
     infer.predict(source=imgs_dir, save=True, save_txt=True)
+
+
+def predict(use_model, src_path):
+    use_model_path = os.path.abspath(use_model)
+    src = os.path.abspath(src_path)
+    infer = YOLO(use_model_path)
+    return infer(src)
 
 
 def main():
@@ -60,9 +67,9 @@ def main():
         exp_name = "exp" if args.experiment_name is None else args.experiment_name
         train(train_using, save_to, num_epochs, exp_name)
     elif args.predict_images:
-        use_model = "runs/exp/weights/best.pt" if args.use_model is None else args.use_model 
+        use_model = "runs/detect/exp/weights/best.pt" if args.use_model is None else args.use_model 
         img_dir = "standard_object_shape-1/test/images" if args.images is None else args.images
-        predict(use_model, img_dir) 
+        predict_dir(use_model, img_dir) 
 
 
 if __name__ == "__main__":
