@@ -4,27 +4,24 @@ AErial Reconnaissance and Evaluation Operation VIsion System
 
 This project is a subcomponent of [AEROLOGIC](https://github.com/ERAU-SUAS/AEROLOGIC).
 
-## Shape Detector  
-
-### Getting Started
+## Getting Started
 
 1. Create an account on https://universe.roboflow.com.
 
-2. Create a workspace. [docs](https://docs.roboflow.com/workspaces/roboflow-workspaces)
+2. Generate a private API key and copy it. [docs](https://docs.roboflow.com/api-reference/authentication) 
 
-3. Create an _object detection_ project. [docs](https://docs.roboflow.com/datasets/create-a-project)
+3. Create a file called `.env` and add the line `ROBOFLOW_API_KEY=<your private key>`.
 
-4. Generate a private API key and copy it. [docs](https://docs.roboflow.com/api-reference/authentication) 
+4. Install dependencies using `pip install -r requirements.txt`. 
 
-5. Create a file called `.env`. 
-
-6. Add the line `ROBOFLOW_API_KEY=<your private key>`.
-
-7. Install dependencies using `pip install -r requirements.txt`.
+## Shape Detector 
 
 ### Usage
+```sh
+python3 src/shape_detector.py [OPTIONS...]
+```
 
-#### Train 
+### Training Options 
 
 | Option | Description | Default |
 |---|---|---|
@@ -34,7 +31,7 @@ This project is a subcomponent of [AEROLOGIC](https://github.com/ERAU-SUAS/AEROL
 | `-e`, `--epochs` | Define number of training epochs. | 1 |
 | `-n`, `--experiment-name` | Name of experiment directory. | `exp` |
 
-#### Predict 
+### Predict Options 
 
 | Option | Description | Default |
 |---|---|---|
