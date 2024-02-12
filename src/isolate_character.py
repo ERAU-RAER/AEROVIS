@@ -8,9 +8,11 @@ import matplotlib.pyplot as plt
 def crop_image(src_image, xywh):
     for i in range(len(xywh)):
         xywh[i] = int(xywh[i])
-    x = xywh[0] - int(xywh[2]/2) 
-    y = xywh[1] - int(xywh[3]/2) 
-    bbox = np.array([x, y, xywh[2], xywh[3]])
+    w = xywh[2] - 5 
+    h = xywh[3] - 5 
+    x = xywh[0] - int(w/2)
+    y = xywh[1] - int(h/2) 
+    bbox = np.array([x, y, w, h])
     return src_image[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0]+bbox[2]]
 
 
@@ -23,7 +25,7 @@ def isolate_character(src_image, xywh_tensor_list_floats):
     fgd_model = np.zeros((1, 65), np.float64)
     rect = (1, 1, image.shape[1]-1, image.shape[0]-1)
 
-    cv.grabCut(image, mask, rect, bgd_model, fgd_model, 5, cv.GC_INIT_WITH_RECT)
+    cv.grabCut(image, mask, rect, bgd_model, fgd_model, 7, cv.GC_INIT_WITH_RECT)
 
     mask = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
     result = image * mask[:, :, np.newaxis]
@@ -39,14 +41,13 @@ def isolate_character(src_image, xywh_tensor_list_floats):
     for i in range(num_clusters):
         clustered_images[i][labels == i] = result[labels == i]
 
-    fig, axes = plt.subplots(1, num_clusters + 2, figsize=(15, 5))
+    fig, axes = plt.subplots(1, 3)
     axes[0].imshow(image)
-    axes[0].set_title("Original Image")
+    axes[0].set_title("Original")
     axes[1].imshow(result)
     axes[1].set_title("Background Removed")
-    for i in range(num_clusters):
-        axes[i + 2].imshow(clustered_images[i]) 
-        axes[i + 2].set_title(f"Cluster {i + 1}")
+    axes[2].imshow(clustered_images[2])
+    axes[2].set_title("Final")
     
     plt.savefig('cluster_results.jpg')
     return clustered_images[2]
