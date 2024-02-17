@@ -3,6 +3,7 @@ import random
 import cv2 as cv
 from src.shape_detector import predict
 from src.isolate_character import isolate_character
+from src.color_extractor import get_shape_color
 import numpy as np
 
 
@@ -49,6 +50,7 @@ def debug():
     cropped_img = crop_image(img, xywh_tensor_values)
 
     isolate_character(cropped_img) 
+    print(get_shape_color(cropped_img))
 
     classes = res[0].names
     box_class = int(res[0].boxes.cls.cpu().numpy().tolist()[0])
