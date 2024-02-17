@@ -5,20 +5,8 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 
 
-def crop_image(src_image, xywh):
-    for i in range(len(xywh)):
-        xywh[i] = int(xywh[i])
-    w = xywh[2] - 5 
-    h = xywh[3] - 5 
-    x = xywh[0] - int(w/2)
-    y = xywh[1] - int(h/2) 
-    bbox = np.array([x, y, w, h])
-    return src_image[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0]+bbox[2]]
-
-
-def isolate_character(src_image, xywh_tensor_list_floats):
-    cropped_image = crop_image(src_image, xywh_tensor_list_floats)
-    image = cv.cvtColor(cropped_image, cv.COLOR_BGR2RGB)
+def isolate_character(src_image):
+    image = cv.cvtColor(src_image, cv.COLOR_BGR2RGB)
 
     mask = np.zeros(image.shape[:2], np.uint8)
     bgd_model = np.zeros((1, 65), np.float64)

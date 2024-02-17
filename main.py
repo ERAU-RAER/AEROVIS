@@ -2,7 +2,8 @@ import os
 import random
 import cv2 as cv
 from src.shape_detector import predict
-from src.isolate_character import isolate_character, crop_image
+from src.isolate_character import isolate_character
+import numpy as np
 
 
 def add_bound_box(src_img, xywh_tensor_values, label): 
@@ -25,6 +26,17 @@ def get_random_img():
     return os.path.abspath(f"standard_object_shape-1/test/images/{random.choice(files)}")
 
 
+def crop_image(src_image, xywh):
+    for i in range(len(xywh)):
+        xywh[i] = int(xywh[i])
+    w = xywh[2] - 10 
+    h = xywh[3] - 10 
+    x = xywh[0] - int(w/2)
+    y = xywh[1] - int(h/2) 
+    bbox = np.array([x, y, w, h])
+    return src_image[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0]+bbox[2]]
+
+
 def debug():
     DEFAULT_SHAPE_DETECT_MODEL_PATH = "runs/detect/exp/weights/best.pt"
 
@@ -34,8 +46,9 @@ def debug():
     res = predict(DEFAULT_SHAPE_DETECT_MODEL_PATH, random_img)
     tensor = res[0].boxes.xywh.clone().detach()
     xywh_tensor_values = tensor.cpu().numpy().tolist()[0] 
+    cropped_img = crop_image(img, xywh_tensor_values)
 
-    isolate_character(img, xywh_tensor_values) 
+    isolate_character(cropped_img) 
 
     classes = res[0].names
     box_class = int(res[0].boxes.cls.cpu().numpy().tolist()[0])
