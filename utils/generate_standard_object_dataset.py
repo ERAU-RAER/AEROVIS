@@ -2,20 +2,50 @@ import cv2 as cv
 import numpy as np 
 import os
 import random
-import string
+import hashlib
+from draw_standard_object import draw_shape 
 
-BACKGROUND_SOURCE_IMG_PATH = os.path.abspath("../assets/ground.png");
+BACKGROUND_SOURCE_IMG_PATH = os.path.abspath("assets/ground.png");
 BACKGROUND_IMAGE = cv.imread(BACKGROUND_SOURCE_IMG_PATH)
 
 BACKGROUND_ORIGINAL_HEIGHT, BACKGROUND_ORIGINAL_WIDTH = BACKGROUND_IMAGE.shape[:2]
 RESULT_IMG_WIDTH = 1920
 RESULT_IMG_HEIGHT = 1080 
-SHAPE_SIZE = 50
 SHAPE_IMG_SIZE = 150
+REL_BBOX_WIDTH = SHAPE_IMG_SIZE / BACKGROUND_ORIGINAL_WIDTH
+REL_BBOX_HEIGHT = SHAPE_IMG_SIZE / BACKGROUND_ORIGINAL_HEIGHT
 
-OUTPUT_FOLDER = os.path.abspath("../assets/results")
-if not os.path.exists(OUTPUT_FOLDER):
-    os.makedirs(OUTPUT_FOLDER)
+NUM_SAMPLES = 1000
+PERCENT_TEST = .15
+PERCENT_VALID = .15
+PERCENT_TRAIN = .7
+
+DATA_YAML_CONTENT = """names:
+- CIRCLE
+- SEMICIRCLE
+- QUARTER_CIRCLE
+- TRIANGLE
+- RECTANGLE
+- PENTAGON
+- STAR
+- CROSS
+nc: 8
+test: test/images 
+train: train/images 
+valid: valid/images 
+"""
+
+OUTPUT_FOLDER = os.path.abspath("standard_object_dataset")
+os.makedirs(OUTPUT_FOLDER)
+os.makedirs(os.path.join(OUTPUT_FOLDER, "train"))
+os.makedirs(os.path.join(OUTPUT_FOLDER, "train/images"))
+os.makedirs(os.path.join(OUTPUT_FOLDER, "train/labels"))
+os.makedirs(os.path.join(OUTPUT_FOLDER, "test"))
+os.makedirs(os.path.join(OUTPUT_FOLDER, "test/images"))
+os.makedirs(os.path.join(OUTPUT_FOLDER, "test/labels"))
+os.makedirs(os.path.join(OUTPUT_FOLDER, "valid"))
+os.makedirs(os.path.join(OUTPUT_FOLDER, "valid/images"))
+os.makedirs(os.path.join(OUTPUT_FOLDER, "valid/labels"))
 
 
 def get_random_background_segment():
@@ -42,93 +72,6 @@ def create_transparent_image():
     return np.zeros((SHAPE_IMG_SIZE, SHAPE_IMG_SIZE, 4), dtype=np.uint8)
 
 
-def draw_circle(image, center, color, character, character_color):
-    cv.circle(image, center, SHAPE_SIZE, color, thickness=-1, lineType=cv.LINE_AA)
-    image = draw_character(image, (SHAPE_IMG_SIZE//2, (SHAPE_IMG_SIZE//2)), character, character_color)
-    return image
-
-
-def draw_semicircle(image, center, color, character, character_color):
-    cv.ellipse(image, center, (SHAPE_SIZE+10, SHAPE_SIZE+10), 0, 0, 180, color, thickness=-1, lineType=cv.LINE_AA)
-    draw_character(image, (SHAPE_IMG_SIZE//2, (SHAPE_IMG_SIZE//2)+35), character, character_color)
-    return image
-
-
-def draw_quarter_circle(image, center, color, character, character_color):
-    cv.ellipse(image, (center[0]-(SHAPE_SIZE//2)-10, center[1]-(SHAPE_SIZE//2)-10), (SHAPE_SIZE*2, SHAPE_SIZE*2), 0, 0, 90, color, thickness=-1, lineType=cv.LINE_AA)
-    draw_character(image, (SHAPE_IMG_SIZE//2+5, (SHAPE_IMG_SIZE//2)+15), character, character_color)
-    return image
-
-
-def draw_triangle(image, center, color, character, character_color):
-    vertices = np.array([
-        [center[0] - SHAPE_SIZE, center[1] + SHAPE_SIZE],
-        [center[0], center[1] - SHAPE_SIZE],
-        [center[0] + SHAPE_SIZE, center[1] + SHAPE_SIZE]
-    ], np.int32)
-    cv.fillPoly(image, [vertices], color, lineType=cv.LINE_AA)
-    image = draw_character(image, (SHAPE_IMG_SIZE//2, (SHAPE_IMG_SIZE//2)+15), character, character_color)
-    return image
-
-
-def draw_rectangle(image, center, color, character, character_color):
-    top_left = (center[0] - SHAPE_SIZE, center[1] - int(SHAPE_SIZE / 2))
-    bottom_right = (center[0] + SHAPE_SIZE, center[1] + int(SHAPE_SIZE / 2) + 10)
-    cv.rectangle(image, top_left, bottom_right, color, -1, lineType=cv.LINE_AA)
-    image = draw_character(image, (SHAPE_IMG_SIZE//2, (SHAPE_IMG_SIZE//2)+10), character, character_color)
-    return image
-
-
-def draw_pentagon(image, center, color, character, character_color):
-    pts = np.array([[np.cos(theta) * SHAPE_SIZE + center[0], np.sin(theta) * SHAPE_SIZE + center[1]] 
-                    for theta in np.linspace(0, 2 * np.pi, 6)[:-1] + np.pi / 5])
-    cv.fillPoly(image, [np.array(pts, np.int32)], color, lineType=cv.LINE_AA)
-    image = draw_character(image, (SHAPE_IMG_SIZE//2, (SHAPE_IMG_SIZE//2)+5), character, character_color)
-    return image
-
-
-def draw_star(image, center, color, character, character_color):
-    num_vertices = 5
-
-    outer_radius = SHAPE_SIZE + 15 
-    inner_radius = outer_radius * np.cos(2 * np.pi / num_vertices) / np.cos(np.pi / num_vertices)
-    outer_angle = 2 * np.pi / num_vertices
-    inner_angle = np.pi / num_vertices
-
-    points = []
-
-    for i in range(num_vertices):
-        outer_x = int(center[0] + outer_radius * np.cos(outer_angle * i))
-        outer_y = int(center[1] - outer_radius * np.sin(outer_angle * i))
-        inner_x = int(center[0] + inner_radius * np.cos(outer_angle * i + inner_angle))
-        inner_y = int(center[1] - inner_radius * np.sin(outer_angle * i + inner_angle))
-        points.append((outer_x, outer_y))
-        points.append((inner_x, inner_y))
-
-    star_points = np.array(points, np.int32).reshape((-1, 1, 2))
-    cv.fillPoly(image, [star_points], color, lineType=cv.LINE_AA)
-
-    image = draw_character(image, (SHAPE_IMG_SIZE//2-2, (SHAPE_IMG_SIZE//2)+5), character, character_color)
-
-    return image
-
-
-def draw_cross(image, center, color, character, character_color):
-    thickness = (SHAPE_SIZE // 2) + 15 
-
-    start_point_h = (center[0] - SHAPE_SIZE, center[1] - thickness // 2)
-    end_point_h = (center[0] + SHAPE_SIZE, center[1] + thickness // 2)
-    cv.rectangle(image, start_point_h, end_point_h, color, -1)
-
-    start_point_v = (center[0] - thickness // 2, center[1] - SHAPE_SIZE)
-    end_point_v = (center[0] + thickness // 2, center[1] + SHAPE_SIZE)
-    cv.rectangle(image, start_point_v, end_point_v, color, -1)
-
-    image = draw_character(image, (SHAPE_IMG_SIZE//2, (SHAPE_IMG_SIZE//2)), character, character_color)
-
-    return image
-
-
 def rotate_shape_image(image, angle):
     height, width = image.shape[:2]
     center = (width // 2, height // 2)
@@ -142,13 +85,6 @@ def rotate_shape_image(image, angle):
     
     return new_image
 
-
-def draw_character(image, pos, character, character_color):
-    font = cv.FONT_HERSHEY_DUPLEX
-    font_scale = 2 
-    thickness = 6 
-    cv.putText(image, character, (pos[0]-20, pos[1]+15), font, font_scale, character_color, thickness, cv.LINE_AA)
-    return image
 
 
 def overlay_shape_on_background(background, shape_img, relative_center):
@@ -185,42 +121,48 @@ def get_safe_center(bg_width, bg_height, shape_width, shape_height):
     return (relative_center_x, relative_center_y)
 
 
-COLORS = {
-    "white": (255, 255, 255, 255),
-    "black": (0, 0, 0, 255),
-    "red": (0, 0, 255, 255),
-    "blue": (255, 0, 0, 255),
-    "green": (0, 255, 0, 255),
-    "purple": (128, 0, 128, 255),
-    "brown": (19, 69, 139, 255),
-    "orange": (0, 165, 255, 255)
-}
+def generate_filename(info_str, length):
+    encoded_input = info_str.encode()
+    hash_object = hashlib.sha256(encoded_input)
+    hex_dig = hash_object.hexdigest()
+    truncated_hash = hex_dig[:length]
+    return truncated_hash
 
-DRAW_SHAPE_FUNCTIONS = {
-    0: draw_circle,
-    1: draw_semicircle,
-    2: draw_quarter_circle,
-    3: draw_triangle,
-    4: draw_rectangle,
-    5: draw_pentagon,
-    6: draw_star,
-    7: draw_cross
-}
 
-for i in range(100):
-    path = os.path.join(OUTPUT_FOLDER, f"{i}.jpg")
-    image = get_random_background_segment()
+def generate_data(samples, dir):
+    for _ in range(int(samples)):
+        background_image = get_random_background_segment()
 
-    center = get_safe_center(RESULT_IMG_WIDTH, RESULT_IMG_HEIGHT, SHAPE_IMG_SIZE, SHAPE_IMG_SIZE) 
-    shape = random.randint(0, 7)
-    shape_color = random.choice(list(COLORS.values())) 
-    characters = string.ascii_uppercase + string.digits
-    character = random.choice(characters)
-    character_color = random.choice(list(COLORS.values()))
+        standard_object = draw_shape(create_transparent_image()) 
+        standard_object_image = rotate_shape_image(standard_object[0], random.randint(0, 360))
+        standard_object_shape = standard_object[1][0]
+        standard_object_character = standard_object[1][1]
+        standard_object_center = get_safe_center(RESULT_IMG_WIDTH, RESULT_IMG_HEIGHT, SHAPE_IMG_SIZE, SHAPE_IMG_SIZE) 
 
-    draw_function = DRAW_SHAPE_FUNCTIONS.get(shape, None)
-    shape_image = draw_function(create_transparent_image(), (SHAPE_IMG_SIZE//2, SHAPE_IMG_SIZE//2), shape_color, character, character_color) 
-    shape_image = rotate_shape_image(shape_image, random.randint(0, 360))
-    result = overlay_shape_on_background(image, shape_image, center) 
-    cv.imwrite(path, result)
-    
+        standard_object_image_full = overlay_shape_on_background(background_image, standard_object_image, standard_object_center) 
+        standard_object_label = f"{standard_object_shape} {standard_object_center[0]} {standard_object_center[1]} {REL_BBOX_WIDTH} {REL_BBOX_HEIGHT}" 
+
+        file_name = generate_filename(standard_object_label, 32) + "_" + standard_object_character 
+        print(file_name)
+        img_path = os.path.join(OUTPUT_FOLDER, f"{dir}/images/{file_name}.jpg")
+        label_path = os.path.join(OUTPUT_FOLDER, f"{dir}/labels/{file_name}.txt") 
+
+        cv.imwrite(img_path, standard_object_image_full)
+        with open(os.path.join(OUTPUT_FOLDER, label_path), "w") as f:
+            f.write(standard_object_label)
+        
+
+def main():
+    print("Generating train data...")
+    generate_data(NUM_SAMPLES * PERCENT_TRAIN, "train")
+    print("Generating test data...")
+    generate_data(NUM_SAMPLES * PERCENT_TEST, "test")
+    print("Generating validation data...")
+    generate_data(NUM_SAMPLES * PERCENT_VALID, "valid")
+
+    with open(os.path.join(OUTPUT_FOLDER, "data.yaml"), "w") as f:
+        f.write(DATA_YAML_CONTENT)
+
+
+if __name__ == "__main__":
+    main()
