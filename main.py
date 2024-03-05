@@ -2,10 +2,11 @@ import os
 import random
 import cv2 as cv
 from src.shape_detector import predict
-from src.isolate_character import isolate_character
+from src.isolate_character import isolate_character, isolate_character_exp
 from src.color_extractor import get_shape_color
 import numpy as np
 
+TESSERACT_CUSTOM_CONFIG = r'--psm 10'
 
 def add_bound_box(src_img, xywh_tensor_values, label): 
     bbox = []
@@ -22,9 +23,9 @@ def add_bound_box(src_img, xywh_tensor_values, label):
 
 
 def get_random_img():
-    dir = os.path.abspath("standard_object_shape-1/test/images") 
+    dir = os.path.abspath("standard_object_dataset/test/images") 
     files = [f for f in os.listdir(dir) if os.path.isfile(os.path.join(dir, f))]
-    return os.path.abspath(f"standard_object_shape-1/test/images/{random.choice(files)}")
+    return os.path.abspath(f"standard_object_dataset/test/images/{random.choice(files)}")
 
 
 def crop_image(src_image, xywh):
@@ -46,22 +47,26 @@ def debug():
 
     res = predict(DEFAULT_SHAPE_DETECT_MODEL_PATH, random_img)
     tensor = res[0].boxes.xywh.clone().detach()
-    xywh_tensor_values = tensor.cpu().numpy().tolist()[0] 
+    try:
+        xywh_tensor_values = tensor.cpu().numpy().tolist()[0] 
+    except:
+        return
     cropped_img = crop_image(img, xywh_tensor_values)
 
-    isolate_character(cropped_img) 
-    print(get_shape_color(cropped_img))
+    #isolated_character_image = isolate_character(cropped_img) 
+    isolated_character_image = isolate_character_exp(cropped_img) 
 
     classes = res[0].names
     box_class = int(res[0].boxes.cls.cpu().numpy().tolist()[0])
     label = classes[box_class]
-
     image_with_box = add_bound_box(img, xywh_tensor_values, label)
 
     cv.imshow("shape detection", image_with_box)
-    cv.imshow("isolated character", cv.imread("cluster_results.jpg"))
+    cv.imshow("isolated character", isolated_character_image)
     cv.waitKey(0)
     cv.destroyAllWindows()
 
+
 if __name__ == '__main__':
-    debug()
+    while True:
+        debug() 
