@@ -26,7 +26,7 @@ def train(use_model, save_to, num_epochs, exp_name):
     os.makedirs('./models', exist_ok=True)
     model_path = os.path.abspath(use_model)
     model = YOLO(model_path)
-    data_path = os.path.abspath("./standard_object_shape-1/data.yaml")
+    data_path = os.path.abspath("./standard_object_dataset/data.yaml")
     model.train(model=model_path, data=data_path, save=True, epochs=num_epochs, name=exp_name) 
     full_save_path = os.path.abspath(save_to)
     os.replace("yolov8n.pt", full_save_path) 

@@ -12,10 +12,11 @@ BACKGROUND_ORIGINAL_HEIGHT, BACKGROUND_ORIGINAL_WIDTH = BACKGROUND_IMAGE.shape[:
 RESULT_IMG_WIDTH = 1920
 RESULT_IMG_HEIGHT = 1080 
 SHAPE_IMG_SIZE = 150
-REL_BBOX_WIDTH = SHAPE_IMG_SIZE / BACKGROUND_ORIGINAL_WIDTH
-REL_BBOX_HEIGHT = SHAPE_IMG_SIZE / BACKGROUND_ORIGINAL_HEIGHT
+#REL_BBOX_WIDTH = SHAPE_IMG_SIZE / BACKGROUND_ORIGINAL_WIDTH
+#REL_BBOX_HEIGHT = SHAPE_IMG_SIZE / BACKGROUND_ORIGINAL_HEIGHT
+REL_BBOX_SIZE = SHAPE_IMG_SIZE / BACKGROUND_ORIGINAL_HEIGHT
 
-NUM_SAMPLES = 1000
+NUM_SAMPLES = 50000
 PERCENT_TEST = .15
 PERCENT_VALID = .15
 PERCENT_TRAIN = .7
@@ -32,7 +33,7 @@ DATA_YAML_CONTENT = """names:
 nc: 8
 test: test/images 
 train: train/images 
-valid: valid/images 
+val: valid/images 
 """
 
 OUTPUT_FOLDER = os.path.abspath("standard_object_dataset")
@@ -140,7 +141,7 @@ def generate_data(samples, dir):
         standard_object_center = get_safe_center(RESULT_IMG_WIDTH, RESULT_IMG_HEIGHT, SHAPE_IMG_SIZE, SHAPE_IMG_SIZE) 
 
         standard_object_image_full = overlay_shape_on_background(background_image, standard_object_image, standard_object_center) 
-        standard_object_label = f"{standard_object_shape} {standard_object_center[0]} {standard_object_center[1]} {REL_BBOX_WIDTH} {REL_BBOX_HEIGHT}" 
+        standard_object_label = f"{standard_object_shape} {standard_object_center[0]} {standard_object_center[1]} {REL_BBOX_SIZE} {REL_BBOX_SIZE}" 
 
         file_name = generate_filename(standard_object_label, 32) + "_" + standard_object_character 
         print(file_name)
